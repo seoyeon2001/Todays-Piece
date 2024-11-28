@@ -7,12 +7,21 @@
     android:padding="8dp" >
 
 <!--    날짜가 들어감-->
-    <TextView
-        android:id="@+id/dayText"
+<!--    <TextView-->
+<!--        android:id="@+id/dayText"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:text="1"-->
+<!--        android:textSize="25sp"-->
+<!--        android:textStyle="bold"/>-->
+
+    <ImageButton
+        android:id="@+id/dayImageButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="1"
-        android:textSize="25sp"
-        android:textStyle="bold"/>
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_next"
+        android:scaleType="fitCenter" />
 </LinearLayout>
