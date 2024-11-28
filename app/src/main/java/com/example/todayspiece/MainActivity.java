@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         // 일
         ArrayList<LocalDate> dayList = daysInMonthArray(CalendarUtil.selectedDate);
 
-        CalendarAdapter adapter = new CalendarAdapter(dayList);
+        CalendarAdapter adapter = new CalendarAdapter(this, dayList);
 
         // 레이아웃 설정
         RecyclerView.LayoutManager manager = new GridLayoutManager(getApplicationContext(), 7);
