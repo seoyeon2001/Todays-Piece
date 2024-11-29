@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 배경 투명 -->
+    <solid android:color="@android:color/transparent" />
+
+    <!-- 테두리 색상 -->
+    <stroke
+        android:width="2dp"
+        android:color="@color/black" />
+
+    <!-- 모서리 둥글기 조정 -->
+    <corners android:radius="4dp"/>
+</shape>

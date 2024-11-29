@@ -12,17 +12,21 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.todayspiece.database.CalendarEntry;
+import com.example.todayspiece.database.DatabaseManager;
+import com.example.todayspiece.database.SampleData;
+
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView monthYearText;
-//    LocalDate selectedDate;
-
     RecyclerView recyclerView;
+    private DatabaseManager databaseManager; // 최종적으로 삭제할 코드입니다.
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -35,6 +39,17 @@ public class MainActivity extends AppCompatActivity {
         ImageButton preBtn = findViewById(R.id.pre_btn);
         ImageButton nextBtn = findViewById(R.id.next_btn);
         recyclerView = findViewById(R.id.recyclerView);
+
+        // DatabaseManager 초기화 - 최종적으로 삭제할 코드입니다.
+        databaseManager = new DatabaseManager(this);
+
+        // 샘플 데이터 생성 - 최종적으로 삭제할 코드입니다.
+        List<CalendarEntry> sampleData = SampleData.generateSampleData(this);
+
+        // 샘플 데이터를 데이터베이스에 삽입 - 최종적으로 삭제할 코드 입니다.
+        for (CalendarEntry entry : sampleData) {
+            databaseManager.insertEntry(entry.getDate(), entry.getImage(), entry.getTitle(), entry.getDetails());
+        }
 
         // 현재 날짜
         CalendarUtil.selectedDate = LocalDate.now();
@@ -122,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
         return dayList;
     }
 
-    // 클릭하면 Toast - 날짜 어뎁터에서 넘긴 데이터를 받는 메서드
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public void onItemClick(String dayText) {
-        String yearMonDay = yearMonthFromDate(CalendarUtil.selectedDate) + " " + dayText + "일";
-        Toast.makeText(this, yearMonDay, Toast.LENGTH_SHORT).show();
-    }
+//    // 클릭하면 Toast - 날짜 어뎁터에서 넘긴 데이터를 받는 메서드
+//    @RequiresApi(api = Build.VERSION_CODES.O)
+//    public void onItemClick(String dayText) {
+//        String yearMonDay = yearMonthFromDate(CalendarUtil.selectedDate) + " " + dayText + "일";
+//        Toast.makeText(this, yearMonDay, Toast.LENGTH_SHORT).show();
+//    }
 }

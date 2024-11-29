@@ -1,15 +1,16 @@
 package com.example.todayspiece.database;
 
-
 import android.graphics.Bitmap;
 
+import java.time.LocalDate;
+
 public class CalendarEntry {
-    private String date;
+    private LocalDate date;
     private Bitmap image;
     private String title;
     private String details;
 
-    public CalendarEntry(String date, Bitmap image, String title, String details) {
+    public CalendarEntry(LocalDate date, Bitmap image, String title, String details) {
         this.date = date;
         this.image = image;
         this.title = title;
@@ -17,11 +18,11 @@ public class CalendarEntry {
     }
 
     // Getter and Setter methods
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

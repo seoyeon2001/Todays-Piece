@@ -3,6 +3,9 @@ package com.example.todayspiece.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -15,7 +18,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_DATE = "date"; // PK
     public static final String COLUMN_IMAGE = "image"; // 이미지
     public static final String COLUMN_TITLE = "title";  // 한줄의 제목
-    public static final String COLUMN_DETAILS = "schedule_details"; // 일정
+    public static final String COLUMN_DETAILS = "details"; // 일기
 
     // 테이블 생성 SQL
     private static final String TABLE_CREATE =
@@ -35,9 +38,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(TABLE_CREATE);
     }
 
+    // 테이블을 삭제한 후 다시 생성
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
+    }
+
+    // LocalDate를 String으로 변환하여 데이터베이스에 저장
+    public static String convertLocalDateToString(java.time.LocalDate date) {
+        return date.toString();
+    }
+
+    // String을 LocalDate로 변환
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static java.time.LocalDate convertStringToLocalDate(String dateString) {
+        return java.time.LocalDate.parse(dateString);
     }
 }

@@ -7,29 +7,40 @@ import java.io.ByteArrayOutputStream;
 import android.graphics.Bitmap;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
-import java.io.ByteArrayOutputStream;
+import android.os.Build;
+import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
 
 
 public class DatabaseManager {
     private DatabaseHelper dbHelper;
+    private Context context;
 
     public DatabaseManager(Context context) {
+        this.context = context;
         // 데이터베이스 초기화
         dbHelper = new DatabaseHelper(context);
     }
 
     // 데이터 삽입
-    public void insertEntry(String date, Bitmap image, String title, String details) {
+    public void insertEntry(LocalDate date, Bitmap image, String title, String details) {
         try (SQLiteDatabase db = dbHelper.getWritableDatabase()) {
             ContentValues values = new ContentValues();
-            values.put(DatabaseHelper.COLUMN_DATE, date);
 
-            // 이미지(Bitmap -> BLOB 변환)
+            // LocalDate를 String으로 변환하여 저장
+            String dateString = DatabaseHelper.convertLocalDateToString(date);
+            values.put(DatabaseHelper.COLUMN_DATE, dateString);
+
+            // 이미지를 내부 저장소에 저장하고 경로를 데이터베이스에 저장
             if (image != null) {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                image.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] imageData = stream.toByteArray();
-                values.put(DatabaseHelper.COLUMN_IMAGE, imageData);
+                String imagePath = saveImageToInternalStorage(dateString, image);
+                values.put(DatabaseHelper.COLUMN_IMAGE, imagePath);
             }
 
             values.put(DatabaseHelper.COLUMN_TITLE, title);
@@ -42,38 +53,45 @@ public class DatabaseManager {
         }
     }
 
+    // 이미지 저장 메서드 (내부 저장)
+    private String saveImageToInternalStorage(String imageName, Bitmap image) {
+        File directory = context.getFilesDir(); // 내부 저장소 경로
+        File imageFile = new File(directory, imageName + ".png");
+
+        try (FileOutputStream fos = new FileOutputStream(imageFile)) {
+            image.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            return imageFile.getAbsolutePath(); // 저장된 이미지 파일 경로 반환
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     // 저장된 데이터를 조회해 캘린더와 연동 (특정 날짜의 데이터 조회)
-    public CalendarEntry getEntry(String date) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public CalendarEntry getEntry(LocalDate date) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String dateString = DatabaseHelper.convertLocalDateToString(date);
 
         Cursor cursor = db.query(DatabaseHelper.TABLE_NAME,
                 new String[]{DatabaseHelper.COLUMN_DATE, DatabaseHelper.COLUMN_IMAGE,
                         DatabaseHelper.COLUMN_TITLE, DatabaseHelper.COLUMN_DETAILS},
                 DatabaseHelper.COLUMN_DATE + " = ?",
-                new String[]{date}, null, null, null);
+                new String[]{dateString}, null, null, null);
 
         if (cursor != null && cursor.moveToFirst()) {
-            int dateIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_DATE);
-            int imageIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_IMAGE);
-            int titleIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_TITLE);
-            int detailsIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_DETAILS);
+            String retrievedDate = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DATE));
+            String imagePath = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_IMAGE));
+            String title = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TITLE));
+            String details = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_DETAILS));
 
-            if (dateIndex != -1 && imageIndex != -1 && titleIndex != -1 && detailsIndex != -1) {
-                String retrievedDate = cursor.getString(dateIndex);
+            Bitmap image = loadImageFromInternalStorage(imagePath);
 
-                byte[] imageBytes = cursor.getBlob(imageIndex);
-                Bitmap image = null;
-                if (imageBytes != null) {
-                    image = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                }
+            cursor.close();
 
-                String title = cursor.getString(titleIndex);
-                String details = cursor.getString(detailsIndex);
-
-                cursor.close();
-                return new CalendarEntry(retrievedDate, image, title, details);
-            }
+            // 날짜를 String에서 LocalDate로 변환하여 반환
+            return new CalendarEntry(DatabaseHelper.convertStringToLocalDate(retrievedDate), image, title, details);
         }
 
         if (cursor != null) {
@@ -82,20 +100,43 @@ public class DatabaseManager {
         return null;
     }
 
+    // 이미지 불러오기 메서드
+    private Bitmap loadImageFromInternalStorage(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) return null;
 
-
+        File imageFile = new File(imagePath);
+        if (imageFile.exists()) {
+            return BitmapFactory.decodeFile(imagePath);
+        }
+        return null;
+    }
 
     // 데이터 업데이트
-    public void updateEntry(String date, Bitmap image, String title, String details) {
+    public void updateEntry(LocalDate date, Bitmap image, String title, String details) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
+//        ContentValues values = new ContentValues();
+//        values.put(DatabaseHelper.COLUMN_DATE, DatabaseHelper.convertLocalDateToString(date)); // LocalDate -> String 변환
+//        values.put(DatabaseHelper.COLUMN_IMAGE, imageToBytes(image)); // Bitmap -> BLOB 변환
+//        values.put(DatabaseHelper.COLUMN_TITLE, title);
+//        values.put(DatabaseHelper.COLUMN_DETAILS, details);
+//
+//        String whereClause = DatabaseHelper.COLUMN_DATE + " = ?";
+//        String[] whereArgs = {DatabaseHelper.convertLocalDateToString(date)};
+
+        String dateString = DatabaseHelper.convertLocalDateToString(date);
         ContentValues values = new ContentValues();
-        values.put(DatabaseHelper.COLUMN_IMAGE, imageToBytes(image)); // Bitmap -> BLOB 변환
         values.put(DatabaseHelper.COLUMN_TITLE, title);
         values.put(DatabaseHelper.COLUMN_DETAILS, details);
 
+        // 이미지가 있는 경우 내부 저장소에 업데이트
+        if (image != null) {
+            String imagePath = saveImageToInternalStorage(dateString, image);
+            values.put(DatabaseHelper.COLUMN_IMAGE, imagePath);
+        }
+
         String whereClause = DatabaseHelper.COLUMN_DATE + " = ?";
-        String[] whereArgs = {date};
+        String[] whereArgs = {dateString};
 
         db.update(DatabaseHelper.TABLE_NAME, values, whereClause, whereArgs);
         db.close();
@@ -108,11 +149,27 @@ public class DatabaseManager {
         return stream.toByteArray();
     }
 
+    // 이미지 삭제 메서드
+    private void deleteImageFromInternalStorage(String imageName) {
+        File directory = context.getFilesDir();
+        File imageFile = new File(directory, imageName + ".png");
+
+        if (imageFile.exists()) {
+            boolean deleted = imageFile.delete();
+            if (!deleted) {
+                Log.d("DatabaseManager", "Failed to delete image: " + imageFile.getAbsolutePath());
+            }
+        }
+    }
+
     // 데이터 삭제
-    public void deleteEntry(String date) {
+    public void deleteEntry(LocalDate date) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         String whereClause = DatabaseHelper.COLUMN_DATE + " = ?";
-        String[] whereArgs = {date};
+        String[] whereArgs = {DatabaseHelper.convertLocalDateToString(date)};
+
+        // 이미지도 함께 삭제
+        deleteImageFromInternalStorage(DatabaseHelper.convertLocalDateToString(date));
 
         db.delete(DatabaseHelper.TABLE_NAME, whereClause, whereArgs);
         db.close();
