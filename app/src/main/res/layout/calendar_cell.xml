@@ -2,26 +2,32 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/parentView"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="70dp"
     android:orientation="vertical"
-    android:padding="8dp" >
+    android:gravity="center" >
 
-<!--    날짜가 들어감-->
-<!--    <TextView-->
-<!--        android:id="@+id/dayText"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_gravity="center"-->
-<!--        android:text="1"-->
-<!--        android:textSize="25sp"-->
-<!--        android:textStyle="bold"/>-->
+    <!--일자가 들어감-->
+    <Button
+        android:id="@+id/dayButton"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_gravity="center"
+        android:text="1"
+        android:textColor="@color/black"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:background="@android:color/transparent" />
 
+
+    <!--일기를 작성했을 때 보이는 이미지-->
     <ImageButton
         android:id="@+id/dayImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:background="@android:color/transparent"
-        android:src="@drawable/ic_next"
-        android:scaleType="fitCenter" />
+        android:src="@drawable/default_img"
+        android:scaleType="centerInside"
+        android:visibility="invisible" />
 </LinearLayout>
