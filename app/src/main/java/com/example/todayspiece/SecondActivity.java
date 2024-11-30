@@ -112,6 +112,7 @@ public class SecondActivity extends Activity {
         Intent intent = new Intent(SecondActivity.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        overridePendingTransition(0, 0);
         finish();  // 현재 액티비티 종료
     }
 }

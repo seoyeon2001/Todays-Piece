@@ -1,5 +1,6 @@
 package com.example.todayspiece;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -85,6 +86,8 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
             Intent intent = new Intent(context, SecondActivity.class);
             intent.putExtra("selectedDate", yearMonDay);
             context.startActivity(intent);
+
+            ((Activity) context).overridePendingTransition(0, 0);
         }
     }
 
