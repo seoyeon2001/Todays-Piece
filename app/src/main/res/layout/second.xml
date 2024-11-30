@@ -30,7 +30,7 @@
             android:hint="@string/enter_title"
             android:textSize="18sp"
             android:padding="12dp"
-            android:inputType="date"
+            android:inputType="text"
             android:autofillHints="date" />
 
         <!-- 이미지 버튼 -->

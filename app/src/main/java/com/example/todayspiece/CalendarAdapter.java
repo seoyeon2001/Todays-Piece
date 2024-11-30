@@ -66,9 +66,9 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
 
         // 요일별 텍스트 색상 설정
         if ((position + 1) % 7 == 0) {
-            holder.dayButton.setTextColor(Color.BLUE); // 일요일
+            holder.dayButton.setTextColor(Color.BLUE); // 토
         } else if (position % 7 == 0) {
-            holder.dayButton.setTextColor(Color.RED); // 월요일
+            holder.dayButton.setTextColor(Color.RED); // 일
         } else {
             holder.dayButton.setTextColor(Color.BLACK); // 기타
         }

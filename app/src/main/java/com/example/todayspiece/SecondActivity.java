@@ -73,6 +73,9 @@ public class SecondActivity extends Activity {
             );
 
             Toast.makeText(this, getString(R.string.saved_message), Toast.LENGTH_SHORT).show();
+
+            // 저장 후 메인 화면으로 이동
+            goToMainActivity();
         });
 
         // 나가기 버튼
@@ -102,5 +105,13 @@ public class SecondActivity extends Activity {
                 e.printStackTrace();
             }
         }
+    }
+
+    // 메인 화면으로 이동
+    private void goToMainActivity() {
+        Intent intent = new Intent(SecondActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();  // 현재 액티비티 종료
     }
 }
