@@ -1,7 +1,5 @@
 package com.example.todayspiece;
 
-
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,65 +10,79 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.example.todayspiece.database.CalendarEntry;
+import com.example.todayspiece.database.DatabaseHelper;
+import com.example.todayspiece.database.DatabaseManager;
 
 import java.io.IOException;
 
 public class SecondActivity extends Activity {
 
     private static final int PICK_IMAGE_REQUEST = 1; // Request code for gallery intent
-    private EditText dairytitle; // edittext 입력한 값
-    private EditText dairytxt; // 내용 입력한 값
-    private ImageButton dairyimage; // 이미지 선택한 값
+    private EditText dairytitle; // 제목 입력
+    private EditText dairytxt; // 내용 입력
+    private ImageButton dairyimage; // 이미지 선택
+    private Bitmap selectedBitmap = null; // 선택된 이미지
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.second);
 
-        // Bind views
+        // View 초기화
         dairytitle = findViewById(R.id.dateEditText);
         dairytxt = findViewById(R.id.diaryEditText);
         dairyimage = findViewById(R.id.dateImagebtn);
 
-        // Placeholder for fetching data from the database
-        //dairytitle.setText(); // Fetch title from DB
-       //dairytxt.setText(""); // Fetch content from DB
-        //dairyimage.setImageBitmap(); // Fetch image from DB if needed
+        // Intent로부터 선택된 날짜 가져오기
+        Intent intent = getIntent();
+        String selectedDate = intent.getStringExtra("selectedDate");
 
-        // ImageButton to open gallery
-        dairyimage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openGallery();
+        // 데이터베이스 매니저 초기화
+        DatabaseManager databaseManager = new DatabaseManager(this);
+
+        // 기존 데이터 로드
+        CalendarEntry entry = databaseManager.getEntry(DatabaseHelper.convertStringToLocalDate(selectedDate));
+        if (entry != null) {
+            dairytitle.setText(entry.getTitle());
+            dairytxt.setText(entry.getDetails());
+            if (entry.getImage() != null) {
+                dairyimage.setImageBitmap(entry.getImage());
+                selectedBitmap = entry.getImage();
             }
-        });
+        }
 
-        // Save button logic
+        // 갤러리 열기 버튼
+        dairyimage.setOnClickListener(view -> openGallery());
+
+        // 저장 버튼 동작
         Button savebtn = findViewById(R.id.savebtn);
-        savebtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String title = dairytitle.getText().toString().trim();
-                String dairycontent = dairytxt.getText().toString().trim();
+        savebtn.setOnClickListener(view -> {
+            String title = dairytitle.getText().toString().trim();
+            String content = dairytxt.getText().toString().trim();
 
-                // Save title, content to the database
-            }
+            // 데이터 저장
+            databaseManager.insertEntry(
+                    DatabaseHelper.convertStringToLocalDate(selectedDate),
+                    selectedBitmap,
+                    title,
+                    content
+            );
+
+            Toast.makeText(this, "저장되었습니다.", Toast.LENGTH_SHORT).show();
         });
 
-        // Exit button logic
+        // 나가기 버튼 동작
         Button exitbtn = findViewById(R.id.exitbtn);
-        exitbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        exitbtn.setOnClickListener(view -> finish());
     }
 
-    // Method to open the gallery
+    // 갤러리 열기
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*"); // Set type to only images
+        intent.setType("image/*"); // 이미지만 표시
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
 
@@ -79,13 +91,13 @@ public class SecondActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData(); // Get image URI
+            Uri imageUri = data.getData(); // 선택된 이미지 URI
 
             try {
-                // Convert URI to Bitmap
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                // Set the selected image as the ImageButton's image
-                dairyimage.setImageBitmap(bitmap);
+                // URI를 Bitmap으로 변환
+                selectedBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                // 선택된 이미지를 ImageButton에 표시
+                dairyimage.setImageBitmap(selectedBitmap);
             } catch (IOException e) {
                 e.printStackTrace();
             }

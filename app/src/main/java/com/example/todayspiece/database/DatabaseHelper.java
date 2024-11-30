@@ -7,6 +7,9 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // 데이터베이스 이름 및 버전
@@ -46,13 +49,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // LocalDate를 String으로 변환하여 데이터베이스에 저장
-    public static String convertLocalDateToString(java.time.LocalDate date) {
-        return date.toString();
+    public static String convertLocalDateToString(LocalDate date) {
+        // yyyy년 MM월 dd일 형식으로 변환
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+        return date.format(formatter);
     }
 
     // String을 LocalDate로 변환
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static java.time.LocalDate convertStringToLocalDate(String dateString) {
-        return java.time.LocalDate.parse(dateString);
+    public static LocalDate convertStringToLocalDate(String dateString) {
+        // yyyy년 MM월 dd일 형식에서 LocalDate로 변환
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+        return LocalDate.parse(dateString, formatter);
     }
 }
