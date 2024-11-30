@@ -1,93 +1,113 @@
 package com.example.todayspiece;
 
-
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
-import java.io.IOException;
+import com.example.todayspiece.database.CalendarEntry;
+import com.example.todayspiece.database.DatabaseManager;
 
 public class SecondActivity extends Activity {
 
-    private static final int PICK_IMAGE_REQUEST = 1; // Request code for gallery intent
-    private EditText dairytitle; // edittext 입력한 값
-    private EditText dairytxt; // 내용 입력한 값
-    private ImageButton dairyimage; // 이미지 선택한 값
+    private EditText dairytitle; // EditText for diary title
+    private EditText dairytxt; // EditText for diary content
+    private ImageButton dairyimage; // ImageButton for image selection
+    private TextView selectedDateTextView; // TextView for displaying the selected date
+    private DatabaseManager databaseManager; // DatabaseManager instance
+    private Bitmap selectedImageBitmap; // To store selected image
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.second);
 
+        // Initialize DatabaseManager
+        databaseManager = new DatabaseManager(this);
+
         // Bind views
+        selectedDateTextView = findViewById(R.id.selectedDateTextView);
         dairytitle = findViewById(R.id.dateEditText);
         dairytxt = findViewById(R.id.diaryEditText);
         dairyimage = findViewById(R.id.dateImagebtn);
 
-        // Placeholder for fetching data from the database
-        //dairytitle.setText(); // Fetch title from DB
-       //dairytxt.setText(""); // Fetch content from DB
-        //dairyimage.setImageBitmap(); // Fetch image from DB if needed
+        // Retrieve and display the selected date
+        Intent intent = getIntent();
+        String selectedDate = intent.getStringExtra("selectedDate");
+        if (selectedDate != null) {
+            selectedDateTextView.setText(selectedDate);
+            loadEntryFromDatabase(selectedDate); // Load data from database if available
+        }
 
         // ImageButton to open gallery
-        dairyimage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openGallery();
-            }
-        });
+        dairyimage.setOnClickListener(view -> openGallery());
 
         // Save button logic
         Button savebtn = findViewById(R.id.savebtn);
-        savebtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String title = dairytitle.getText().toString().trim();
-                String dairycontent = dairytxt.getText().toString().trim();
+        savebtn.setOnClickListener(view -> {
+            String title = dairytitle.getText().toString().trim();
+            String content = dairytxt.getText().toString().trim();
 
-                // Save title, content to the database
+            if (selectedDate != null && !title.isEmpty() && !content.isEmpty()) {
+                // Save data to the database
+                databaseManager.insertEntry(selectedDate, selectedImageBitmap, title, content);
             }
         });
 
         // Exit button logic
         Button exitbtn = findViewById(R.id.exitbtn);
-        exitbtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        exitbtn.setOnClickListener(view -> finish());
     }
 
-    // Method to open the gallery
+    /**
+     * Load data from the database and populate the UI.
+     *
+     * @param date The primary key (date) to search for in the database.
+     */
+    private void loadEntryFromDatabase(String date) {
+        // Retrieve the entry from the database
+        CalendarEntry entry = databaseManager.getEntry(date);
+
+        // If an entry is found, populate the UI components
+        if (entry != null) {
+            dairytitle.setText(entry.getTitle()); // Set title
+            dairytxt.setText(entry.getDetails()); // Set details
+
+            // Set the image if it exists
+            Bitmap image = entry.getImage();
+            if (image != null) {
+                dairyimage.setImageBitmap(image);
+            }
+        } else {
+            // Handle the case where no data is found (e.g., show a placeholder)
+            dairytitle.setText(""); // Clear title
+            dairytxt.setText(""); // Clear details
+            dairyimage.setImageResource(R.drawable.ic_launcher_background); // Set a placeholder image
+        }
+    }
+
+    /**
+     * Open the gallery to select an image for the diary.
+     */
     private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*"); // Set type to only images
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, 1); // Request code for gallery
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData(); // Get image URI
-
-            try {
-                // Convert URI to Bitmap
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                // Set the selected image as the ImageButton's image
-                dairyimage.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null) {
+            // Get the image URI from the gallery
+            selectedImageBitmap = data.getParcelableExtra("data");
+            if (selectedImageBitmap != null) {
+                dairyimage.setImageBitmap(selectedImageBitmap); // Set image to ImageButton
             }
         }
     }
